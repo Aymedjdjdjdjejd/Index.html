@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz: Fasten im Christentum und Islam</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #6D2E46 0%, #A26769 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .quiz-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        .quiz-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .quiz-header h1 {
+            color: #6D2E46;
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .quiz-header p {
+            color: #5A4A42;
+            font-size: 1.1em;
+        }
+
+        .progress-bar {
+            background: #ECE2D0;
+            height: 10px;
+            border-radius: 5px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #6D2E46, #C89F77);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .question-container {
+            display: none;
+        }
+
+        .question-container.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .question-number {
+            color: #A26769;
+            font-size: 0.9em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .question-text {
+            color: #2C1810;
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 25px;
+            line-height: 1.4;
+        }
+
+        .answers {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .answer-btn {
+            background: #F5F5F5;
+            border: 2px solid #ECE2D0;
+            border-radius: 12px;
+            padding: 18px 24px;
+            font-size: 1.05em;
+            color: #2C1810;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+            position: relative;
+        }
+
+        .answer-btn:hover {
+            background: #ECE2D0;
+            border-color: #A26769;
+            transform: translateX(5px);
+        }
+
+        .answer-btn.selected {
+            background: #6D2E46;
+            color: white;
+            border-color: #6D2E46;
+        }
+
+        .answer-btn.correct {
+            background: #2C5F2D;
+            color: white;
+            border-color: #2C5F2D;
+        }
+
+        .answer-btn.incorrect {
+            background: #B85042;
+            color: white;
+            border-color: #B85042;
+        }
+
+        .answer-btn:disabled {
+            cursor: not-allowed;
+        }
+
+        .answer-btn::before {
+            content: '';
+            width: 24px;
+            height: 24px;
+            border: 2px solid #A26769;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 12px;
+            vertical-align: middle;
+        }
+
+        .answer-btn.selected::before,
+        .answer-btn.correct::before,
+        .answer-btn.incorrect::before {
+            border-color: white;
+            background: white;
+        }
+
+        .explanation {
+            display: none;
+            background: #FFF9F0;
+            border-left: 4px solid #C89F77;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 8px;
+            animation: fadeIn 0.5s;
+        }
+
+        .explanation.show {
+            display: block;
+        }
+
+        .explanation-title {
+            color: #6D2E46;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .explanation-text {
+            color: #5A4A42;
+            line-height: 1.6;
+        }
+
+        .navigation {
+            margin-top: 30px;
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .next-btn {
+            background: #6D2E46;
+            color: white;
+            flex: 1;
+        }
+
+        .next-btn:hover:not(:disabled) {
+            background: #8A3A5A;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(109, 46, 70, 0.3);
+        }
+
+        .next-btn:disabled {
+            background: #CCC;
+            cursor: not-allowed;
+        }
+
+        .prev-btn {
+            background: #ECE2D0;
+            color: #6D2E46;
+        }
+
+        .prev-btn:hover {
+            background: #DDD3C0;
+        }
+
+        .results-container {
+            display: none;
+            text-align: center;
+        }
+
+        .results-container.show {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        .score-circle {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6D2E46, #C89F77);
+            margin: 30px auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .score-number {
+            font-size: 3.5em;
+            font-weight: bold;
+        }
+
+        .score-text {
+            font-size: 1.2em;
+            margin-top: 5px;
+        }
+
+        .results-message {
+            font-size: 1.5em;
+            color: #6D2E46;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+
+        .results-details {
+            background: #FFF9F0;
+            padding: 25px;
+            border-radius: 12px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #ECE2D0;
+            color: #5A4A42;
+            font-size: 1.1em;
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            font-weight: bold;
+        }
+
+        .restart-btn {
+            background: #6D2E46;
+            color: white;
+            padding: 18px 40px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .restart-btn:hover {
+            background: #8A3A5A;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(109, 46, 70, 0.3);
+        }
+
+        @media (max-width: 600px) {
+            .quiz-container {
+                padding: 25px;
+            }
+
+            .quiz-header h1 {
+                font-size: 1.5em;
+            }
+
+            .question-text {
+                font-size: 1.1em;
+            }
+
+            .answer-btn {
+                padding: 15px 18px;
+                font-size: 0.95em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="quiz-container">
+        <div class="quiz-header">
+            <h1>🕌 Quiz: Fasten im Christentum & Islam ✝️</h1>
+            <p>Teste dein Wissen über die Fastentraditionen</p>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <div id="quizContent"></div>
+
+        <div class="results-container" id="results">
+            <h2 class="results-message" id="resultsMessage"></h2>
+            <div class="score-circle">
+                <div class="score-number" id="scoreNumber"></div>
+                <div class="score-text">von 10</div>
+            </div>
+            <div class="results-details">
+                <div class="detail-row">
+                    <span class="detail-label">Richtige Antworten:</span>
+                    <span id="correctCount"></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Falsche Antworten:</span>
+                    <span id="wrongCount"></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Erfolgsquote:</span>
+                    <span id="percentage"></span>
+                </div>
+            </div>
+            <button class="restart-btn" onclick="restartQuiz()">Quiz neu starten</button>
+        </div>
+    </div>
+
+    <script>
+        const quizData = [
+            {
+                question: "Was ist Fasten in beiden Religionen primär?",
+                answers: [
+                    "Eine Diät zum Abnehmen",
+                    "Eine spirituelle Praxis zur inneren Einkehr",
+                    "Ein soziales Event",
+                    "Eine medizinische Therapie"
+                ],
+                correct: 1,
+                explanation: "In beiden Religionen ist Fasten vor allem eine spirituelle Praxis, die der inneren Einkehr, Besinnung und der Nähe zu Gott dient."
+            },
+            {
+                question: "Wie lange dauert die evangelische Fastenzeit (Passionszeit)?",
+                answers: [
+                    "30 Tage",
+                    "40 Tage",
+                    "50 Tage",
+                    "7 Wochen ohne Ausnahme"
+                ],
+                correct: 1,
+                explanation: "Die evangelische Fastenzeit dauert 40 Tage von Aschermittwoch bis Karsamstag, wobei Sonntage vom Fasten ausgenommen sind."
+            },
+            {
+                question: "Ist das Fasten im evangelischen Christentum eine religiöse Pflicht?",
+                answers: [
+                    "Ja, für alle Gläubigen verpflichtend",
+                    "Nein, es ist eine freiwillige Entscheidung",
+                    "Nur für Pastoren verpflichtend",
+                    "Nur in der Adventszeit"
+                ],
+                correct: 1,
+                explanation: "Im evangelischen Christentum ist Fasten keine strenge Pflicht, sondern eine freiwillige Entscheidung. Die Betonung liegt auf der inneren Haltung."
+            },
+            {
+                question: "Was ist der Ramadan?",
+                answers: [
+                    "Ein islamisches Fest",
+                    "Der 9. Monat des islamischen Mondkalenders",
+                    "Eine Moschee in Mekka",
+                    "Der Name des Propheten"
+                ],
+                correct: 1,
+                explanation: "Ramadan ist der 9. Monat des islamischen Mondkalenders und der heilige Fastenmonat, in dem der Koran offenbart wurde."
+            },
+            {
+                question: "Wie lange dauert der Ramadan?",
+                answers: [
+                    "Genau 30 Tage",
+                    "40 Tage",
+                    "29-30 Tage",
+                    "Ein ganzer Monat nach gregorianischem Kalender"
+                ],
+                correct: 2,
+                explanation: "Der Ramadan dauert 29-30 Tage, abhängig vom Mondzyklus, da der islamische Kalender ein Mondkalender ist."
+            },
+            {
+                question: "Was wird im Islam während des Ramadan tagsüber gefastet?",
+                answers: [
+                    "Nur Fleisch",
+                    "Nur feste Nahrung",
+                    "Essen, Trinken und Geschlechtsverkehr",
+                    "Nur Alkohol"
+                ],
+                correct: 2,
+                explanation: "Im Ramadan wird von Morgendämmerung bis Sonnenuntergang vollständig auf Essen, Trinken und Geschlechtsverkehr verzichtet."
+            },
+            {
+                question: "Welche Aktion ist eine beliebte evangelische Fastenaktion?",
+                answers: [
+                    "5 Wochen Ohne",
+                    "7 Wochen Ohne",
+                    "40 Tage Ohne",
+                    "Fastenzeit Plus"
+                ],
+                correct: 1,
+                explanation: "\"7 Wochen Ohne\" ist eine beliebte Fastenaktion der evangelischen Kirche mit jährlich wechselnden Themen."
+            },
+            {
+                question: "Zu welcher Säule des Islam gehört das Fasten?",
+                answers: [
+                    "1. Säule",
+                    "2. Säule",
+                    "3. Säule",
+                    "5. Säule"
+                ],
+                correct: 2,
+                explanation: "Das Fasten (Saum) ist die 3. Säule des Islam und damit eine der fünf Hauptpflichten für Muslime."
+            },
+            {
+                question: "Welcher Tag ist im evangelischen Fasten vom Verzicht ausgenommen?",
+                answers: [
+                    "Freitag",
+                    "Samstag",
+                    "Sonntag",
+                    "Mittwoch"
+                ],
+                correct: 2,
+                explanation: "Sonntage sind in der evangelischen Fastenzeit vom Fasten ausgenommen, da sie als kleine Auferstehungsfeste gelten."
+            },
+            {
+                question: "Was ist eine Gemeinsamkeit beider Fastentraditionen?",
+                answers: [
+                    "Beide dauern genau 40 Tage",
+                    "Beide sind streng verpflichtend",
+                    "Beide dienen der spirituellen Vertiefung und Selbstreflexion",
+                    "Beide verbieten jegliche Nahrungsaufnahme"
+                ],
+                correct: 2,
+                explanation: "Beide Fastentraditionen teilen das Ziel der spirituellen Vertiefung, Selbstdisziplin, Selbstreflexion und der Nähe zu Gott."
+            }
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+        let selectedAnswer = null;
+        let answered = false;
+
+        function loadQuestion() {
+            const question = quizData[currentQuestion];
+            const progress = ((currentQuestion + 1) / quizData.length) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+
+            const quizContent = document.getElementById('quizContent');
+            quizContent.innerHTML = `
+                <div class="question-container active">
+                    <div class="question-number">Frage ${currentQuestion + 1} von ${quizData.length}</div>
+                    <div class="question-text">${question.question}</div>
+                    <div class="answers" id="answers"></div>
+                    <div class="explanation" id="explanation">
+                        <div class="explanation-title">📚 Erklärung:</div>
+                        <div class="explanation-text">${question.explanation}</div>
+                    </div>
+                    <div class="navigation">
+                        ${currentQuestion > 0 ? '<button class="nav-btn prev-btn" onclick="previousQuestion()">← Zurück</button>' : '<div></div>'}
+                        <button class="nav-btn next-btn" id="nextBtn" onclick="nextQuestion()" disabled>
+                            ${currentQuestion < quizData.length - 1 ? 'Weiter →' : 'Ergebnisse anzeigen'}
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            const answersContainer = document.getElementById('answers');
+            question.answers.forEach((answer, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'answer-btn';
+                btn.textContent = answer;
+                btn.onclick = () => selectAnswer(index);
+                answersContainer.appendChild(btn);
+            });
+
+            answered = false;
+            selectedAnswer = null;
+        }
+
+        function selectAnswer(index) {
+            if (answered) return;
+
+            selectedAnswer = index;
+            const answerBtns = document.querySelectorAll('.answer-btn');
+            const question = quizData[currentQuestion];
+
+            answerBtns.forEach((btn, i) => {
+                btn.disabled = true;
+                if (i === index) {
+                    if (i === question.correct) {
+                        btn.classList.add('correct');
+                        score++;
+                    } else {
+                        btn.classList.add('incorrect');
+                    }
+                }
+                if (i === question.correct) {
+                    btn.classList.add('correct');
+                }
+            });
+
+            document.getElementById('explanation').classList.add('show');
+            document.getElementById('nextBtn').disabled = false;
+            answered = true;
+        }
+
+        function nextQuestion() {
+            if (!answered) return;
+
+            currentQuestion++;
+            if (currentQuestion < quizData.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function previousQuestion() {
+            if (currentQuestion > 0) {
+                currentQuestion--;
+                loadQuestion();
+            }
+        }
+
+        function showResults() {
+            const percentage = Math.round((score / quizData.length) * 100);
+            let message = '';
+
+            if (percentage >= 90) {
+                message = '🌟 Ausgezeichnet! Du bist ein Experte!';
+            } else if (percentage >= 70) {
+                message = '👏 Sehr gut! Du hast viel gelernt!';
+            } else if (percentage >= 50) {
+                message = '👍 Gut gemacht! Es gibt noch Raum für Verbesserung.';
+            } else {
+                message = '📚 Schau dir die Präsentation nochmal an!';
+            }
+
+            document.getElementById('quizContent').style.display = 'none';
+            document.getElementById('results').classList.add('show');
+            document.getElementById('resultsMessage').textContent = message;
+            document.getElementById('scoreNumber').textContent = score;
+            document.getElementById('correctCount').textContent = score + ' Fragen';
+            document.getElementById('wrongCount').textContent = (quizData.length - score) + ' Fragen';
+            document.getElementById('percentage').textContent = percentage + '%';
+        }
+
+        function restartQuiz() {
+            currentQuestion = 0;
+            score = 0;
+            document.getElementById('results').classList.remove('show');
+            document.getElementById('quizContent').style.display = 'block';
+            loadQuestion();
+        }
+
+        // Start the quiz
+        loadQuestion();
+    </script>
+</body>
+</html>
